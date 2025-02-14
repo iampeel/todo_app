@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/todo.dart';
 import '../services/storage_service.dart';
+import 'add_todo_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final StorageService storageService;
@@ -82,6 +83,33 @@ class _HomeScreenState extends State<HomeScreen> {
           : Center(
         child: Text('${_todos.length} todos loaded'),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push<String>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddTodoScreen(),
+            ),
+          );
+
+          if (result != null) {
+            try {
+              await _addTodo(result);
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('할 일이 추가되었습니다')),
+              );
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('할 일 추가에 실패했습니다')),
+              );
+            }
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
+
 }
