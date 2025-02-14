@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/storage_service.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,10 +14,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final StorageService storageService;
 
-  const MyApp({
-    super.key,
-    required this.storageService,
-  });
+  const MyApp({super.key, required this.storageService});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +24,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: MyHomePage(storageService: storageService),
+      home: HomeScreen(
+        storageService: storageService,
+      ),
     );
   }
 }
@@ -34,17 +34,10 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   final StorageService storageService;
 
-  const MyHomePage({
-    super.key,
-    required this.storageService,
-  });
+  const MyHomePage({super.key, required this.storageService});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Todo App'),
-      ),
-    );
+    return const Scaffold(body: Center(child: Text('Todo App')));
   }
 }
