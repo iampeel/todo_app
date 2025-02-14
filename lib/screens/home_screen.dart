@@ -92,6 +92,34 @@ class _HomeScreenState extends State<HomeScreen> {
     await widget.storageService.saveTodos(_todos);
   }
 
+  Future<void> _editTodo(String id, String newTitle) async {
+    try {
+      setState(() {
+        final index = _todos.indexWhere((todo) => todo.id == id);
+        if (index != -1) {
+          _todos[index] = Todo(
+            id: id,
+            title: newTitle,
+            isCompleted: _todos[index].isCompleted,
+          );
+        }
+      });
+      await widget.storageService.saveTodos(_todos);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('할 일이 수정되었습니다')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('할 일 수정에 실패했습니다'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
@@ -143,6 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
           todo: todo,
           onToggle: () => _toggleTodo(todo.id),
           onDelete: () => _deleteTodo(todo.id),
+          onEdit: (newTitle) => _editTodo(todo.id, newTitle),
         );
       },
     );
@@ -165,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
               todo: todo,
               onToggle: () => _toggleTodo(todo.id),
               onDelete: () => _deleteTodo(todo.id),
+              onEdit: (newTitle) => _editTodo(todo.id, newTitle), // 이 줄 추가
             ),
           ),
         );

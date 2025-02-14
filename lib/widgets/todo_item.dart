@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../models/todo.dart';
+import '../screens/edit_todo_screen.dart';
 
 class TodoItem extends StatelessWidget {
   final Todo todo;
   final VoidCallback onToggle;
-  final VoidCallback onDelete; // 추가
+  final VoidCallback onDelete;
+  final ValueChanged<String> onEdit;
 
   const TodoItem({
     super.key,
     required this.todo,
     required this.onToggle,
-    required this.onDelete, // 추가
+    required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -49,19 +52,20 @@ class TodoItem extends StatelessWidget {
       },
       onDismissed: (direction) => onDelete(),
       child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors:
-                  todo.isCompleted
-                      ? [Colors.grey.shade200, Colors.grey.shade100]
-                      : [Colors.blue.shade50, Colors.white],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: InkWell(
+          // ListTile을 InkWell로 감쌌습니다
+          onTap: () async {
+            final result = await Navigator.push<String>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditTodoScreen(todo: todo),
+              ),
+            );
+            if (result != null) {
+              onEdit(result);
+            }
+          },
           child: ListTile(
             leading: Checkbox(
               value: todo.isCompleted,
