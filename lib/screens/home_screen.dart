@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Todo> _todos = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -24,6 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadTodos() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
       final todos = await widget.storageService.loadTodos();
       setState(() {
@@ -32,9 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       setState(() {
+        _error = '할 일을 불러오는데 실패했습니다.';
         _isLoading = false;
       });
-      // 에러 처리는 다음 단계에서 구현
     }
   }
 
@@ -67,49 +73,103 @@ class _HomeScreenState extends State<HomeScreen> {
     await widget.storageService.saveTodos(_todos);
   }
 
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('할 일을 불러오는 중...'),
+          ],
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text(_error!),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadTodos, child: const Text('다시 시도')),
+          ],
+        ),
+      );
+    }
+
+    if (_todos.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle_outline, size: 48, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('할 일이 없습니다.'),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _todos.length,
+      itemBuilder: (context, index) {
+        final todo = _todos[index];
+        return TodoItem(
+          todo: todo,
+          onToggle: () => _toggleTodo(todo.id),
+          onDelete: () => _deleteTodo(todo.id),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Todo App')),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _todos.isEmpty
-              ? const Center(child: Text('할 일을 추가해주세요'))
-              : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _todos.length,
-                itemBuilder: (context, index) {
-                  final todo = _todos[index];
-                  return TodoItem(
-                    todo: todo,
-                    onToggle: () => _toggleTodo(todo.id),
-                    onDelete: () => _deleteTodo(todo.id), // 추가
-                  );
-                },
-              ),
+      appBar: AppBar(
+        title: const Text('Todo App'),
+        actions: [
+          if (_error != null)
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _loadTodos),
+        ],
+      ),
+      body: _buildBody(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push<String>(
-            context,
-            MaterialPageRoute(builder: (context) => const AddTodoScreen()),
-          );
+        onPressed:
+            _error != null
+                ? null
+                : () async {
+                  final result = await Navigator.push<String>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddTodoScreen(),
+                    ),
+                  );
 
-          if (result != null) {
-            try {
-              await _addTodo(result);
-              if (!mounted) return;
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('할 일이 추가되었습니다')));
-            } catch (e) {
-              if (!mounted) return;
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('할 일 추가에 실패했습니다')));
-            }
-          }
-        },
+                  if (result != null) {
+                    try {
+                      await _addTodo(result);
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('할 일이 추가되었습니다')),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('할 일 추가에 실패했습니다'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
         child: const Icon(Icons.add),
       ),
     );
