@@ -84,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return TodoItem(
                     todo: todo,
                     onToggle: () => _toggleTodo(todo.id),
+                    onDelete: () => _deleteTodo(todo.id), // 추가
                   );
                 },
               ),
