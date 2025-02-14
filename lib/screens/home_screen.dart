@@ -14,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   List<Todo> _todos = [];
   bool _isLoading = true;
   String? _error;
@@ -48,10 +49,28 @@ class _HomeScreenState extends State<HomeScreen> {
     final todo = Todo(id: DateTime.now().toString(), title: title);
 
     setState(() {
-      _todos.add(todo);
+      _todos.insert(0, todo);
+      _listKey.currentState?.insertItem(0);
     });
 
-    await widget.storageService.saveTodos(_todos);
+    try {
+      await widget.storageService.saveTodos(_todos);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('할 일이 추가되었습니다')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _todos.removeAt(0);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('할 일 추가에 실패했습니다'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _toggleTodo(String id) async {
@@ -124,6 +143,30 @@ class _HomeScreenState extends State<HomeScreen> {
           todo: todo,
           onToggle: () => _toggleTodo(todo.id),
           onDelete: () => _deleteTodo(todo.id),
+        );
+      },
+    );
+  }
+
+  Widget _buildList() {
+    return AnimatedList(
+      key: _listKey,
+      initialItemCount: _todos.length,
+      padding: const EdgeInsets.all(16),
+      itemBuilder: (context, index, animation) {
+        final todo = _todos[index];
+        return SlideTransition(
+          position: animation.drive(
+            Tween(begin: const Offset(1, 0), end: const Offset(0, 0)),
+          ),
+          child: FadeTransition(
+            opacity: animation,
+            child: TodoItem(
+              todo: todo,
+              onToggle: () => _toggleTodo(todo.id),
+              onDelete: () => _deleteTodo(todo.id),
+            ),
+          ),
         );
       },
     );

@@ -21,12 +21,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Todo App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          secondary: Colors.blueAccent,
+        ),
         useMaterial3: true,
+        cardTheme: CardTheme(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+        ),
       ),
-      home: HomeScreen(
-        storageService: storageService,
-      ),
+      home: HomeScreen(storageService: storageService),
     );
   }
 }
