@@ -6,7 +6,6 @@ import '../widgets/todo_item.dart';
 
 class HomeScreen extends StatefulWidget {
   final StorageService storageService;
-
   const HomeScreen({super.key, required this.storageService});
 
   @override
@@ -18,12 +17,18 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Todo> _todos = [];
   bool _isLoading = true;
   String? _error;
+  bool _showCompleted = true;
 
   @override
   void initState() {
     super.initState();
     _loadTodos();
   }
+
+  List<Todo> get _filteredTodos =>
+      _showCompleted
+          ? _todos
+          : _todos.where((todo) => !todo.isCompleted).toList();
 
   Future<void> _loadTodos() async {
     setState(() {
@@ -164,9 +169,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _todos.length,
+      itemCount: _filteredTodos.length,
       itemBuilder: (context, index) {
-        final todo = _todos[index];
+        final todo = _filteredTodos[index];
         return TodoItem(
           todo: todo,
           onToggle: () => _toggleTodo(todo.id),
@@ -208,6 +213,17 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Todo App'),
         actions: [
+          IconButton(
+            icon: Icon(
+              _showCompleted ? Icons.check_circle : Icons.check_circle_outline,
+            ),
+            onPressed: () {
+              setState(() {
+                _showCompleted = !_showCompleted;
+              });
+            },
+            tooltip: _showCompleted ? '완료된 항목 숨기기' : '완료된 항목 보기',
+          ),
           if (_error != null)
             IconButton(icon: const Icon(Icons.refresh), onPressed: _loadTodos),
         ],
